@@ -18,4 +18,5 @@ jobs:
           node-version: 24
       - run: npm install --ignore-scripts
       - run: npm run typecheck
+      - run: npm test
       - run: npm run build
