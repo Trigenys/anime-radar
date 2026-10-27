@@ -24,7 +24,7 @@ Le calendrier de diffusion d'un animé et l'annonce de disponibilité d'un épis
 ## Fonctionnalités implémentées
 
 - **React 19 / Vite** : catalogue, recherche, filtres par genre, favoris locaux et calendrier trié, responsive.
-- **AniList GraphQL** : 50 animés populaires en diffusion, prochaine diffusion annoncée et, si disponible, diffusions récentes. Les métadonnées officielles restent distinctes de Telegram.
+- **AniList GraphQL** : une sélection d'animés récemment lancés, populaires ou bientôt diffusés, dates de première diffusion, prochains épisodes et, si disponible, diffusions récentes. Les métadonnées officielles restent distinctes de Telegram.
 - **Telegram** : import privé du flux JSON ; synchronisation via Telethon sur une sélection explicite de chaînes. Aucun message brut, lien média ou session dans le dépôt.
 - **Serveur local facultatif** : API en lecture seule, limitée à 127.0.0.1, accessible depuis Vite local uniquement.
 - **AppFactory** : blueprint webapp, Project Automation sans PAT, CI Node 24 et tests du parseur.
