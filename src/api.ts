@@ -38,9 +38,13 @@ async function graphQL<T>(query: string, variables: Record<string, unknown>, sig
   return body.data;
 }
 export async function getAiringAnime(signal?: AbortSignal): Promise<Anime[]> {
-  const query = "query { first: Page(page:1, perPage:25) { media(type:ANIME, status:RELEASING, sort:POPULARITY_DESC) { "+FIELDS+" } } second: Page(page:2, perPage:25) { media(type:ANIME, status:RELEASING, sort:POPULARITY_DESC) { "+FIELDS+" } } }";
-  const data = await graphQL<{ first:{media:AniListMedia[]};second:{media:AniListMedia[]} }>(query, {}, signal);
-  return [...data.first.media, ...data.second.media].map(mapMedia).filter(a => a.cover);
+  const query = "query { popular: Page(page:1, perPage:25) { media(type:ANIME, status:RELEASING, sort:POPULARITY_DESC) { "+FIELDS+" } } recent: Page(page:1, perPage:25) { media(type:ANIME, status:RELEASING, sort:START_DATE_DESC) { "+FIELDS+" } } upcoming: Page(page:1, perPage:25) { media(type:ANIME, status:NOT_YET_RELEASED, sort:START_DATE) { "+FIELDS+" } } }";
+  const data = await graphQL<{ popular:{media:AniListMedia[]};recent:{media:AniListMedia[]};upcoming:{media:AniListMedia[]} }>(query, {}, signal);
+  const unique = new Map<number,AniListMedia>();
+  for (const media of [...data.recent.media,...data.upcoming.media,...data.popular.media]) {
+    if (!unique.has(media.id)) unique.set(media.id,media);
+  }
+  return [...unique.values()].map(mapMedia).filter(item => item.cover);
 }
 export async function getRecentlyAired(signal?: AbortSignal): Promise<{ animeId: number; episode:number; at:number }[]> {
   const now = Math.floor(Date.now()/1000);

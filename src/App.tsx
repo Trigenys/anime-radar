@@ -14,6 +14,9 @@ function readFavorites(): number[] {
     return Array.isArray(value) ? value.filter((id): id is number => Number.isInteger(id)) : [];
   } catch { return []; }
 }
+function premiereLabel(date: string): string {
+  return new Intl.DateTimeFormat("fr-FR", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}).format(new Date(date+"T12:00:00Z"));
+}
 function relative(ts: number | string) {
   const diff = Date.now() - (typeof ts === "number" ? ts*1000 : Date.parse(ts));
   if (!Number.isFinite(diff)) return "Date inconnue";
@@ -37,7 +40,9 @@ function AnimeCard({ anime, matched, favorite, toggle }: {anime:Anime;matched?:T
       <div className="anime-meta">
         {anime.nextEpisode ? <span><b>EP {anime.nextEpisode.episode}</b> · {relative(anime.nextEpisode.at)}</span>
         : anime.officialRecent ? <span>EP {anime.officialRecent.episode} · diffusé {relative(anime.officialRecent.at).toLowerCase()}</span>
+        : anime.startDate ? <span>Première · {premiereLabel(anime.startDate)}</span>
         : <span>Prochaine date non renseignée</span>}
+        {anime.nextEpisode && anime.startDate && <small className="premiere-label">Début : {premiereLabel(anime.startDate)}</small>}
       </div>
       <div className={"telegram-info "+(matched ? "active" : "")}>
         <span className="telegram-symbol">✈</span>
@@ -108,6 +113,8 @@ export default function App() {
     return text.includes(query.toLowerCase()) && (genre==="Tous"||item.genres.includes(genre)) && (view!=="favorites"||favorites.includes(item.id));
   }),[anime,query,genre,view,favorites]);
   const upcoming = useMemo(() => [...filtered].filter(item=>item.nextEpisode).sort((a,b)=>(a.nextEpisode?.at||0)-(b.nextEpisode?.at||0)),[filtered]);
+  const premieres = useMemo(() => filtered.filter(item=>item.startDate && Date.parse(item.startDate+"T12:00:00Z") > Date.now() && !item.nextEpisode)
+    .sort((a,b)=>(a.startDate||"").localeCompare(b.startDate||"")), [filtered]);
   const matchedCount = useMemo(()=>anime.filter(item=>bestTelegramMatch(item,posts)).length,[anime,posts]);
   const sortedPosts = useMemo(()=>[...posts].sort((a,b)=>Date.parse(b.postedAt)-Date.parse(a.postedAt)),[posts]);
   const recentPosts = sortedPosts.filter(p=>normalizeQuery(p.title).includes(normalizeQuery(query)));
@@ -160,7 +167,7 @@ export default function App() {
           {loading && view!=="telegram" && <div className="loading" role="status">◉ Synchronisation avec AniList…</div>}
           {!loading && !error && view!=="telegram" && filtered.length===0 && <div className="empty"><span>◌</span><h3>Aucun animé à afficher</h3><p>Modifie tes filtres ou actualise le catalogue.</p></div>}
           {(view==="discover"||view==="favorites") && <div className="anime-grid">{filtered.map(item=><AnimeCard key={item.id} anime={item} matched={bestTelegramMatch(item,posts)} favorite={favorites.includes(item.id)} toggle={()=>toggle(item.id)}/>)}</div>}
-          {view==="calendar" && <div className="schedule-list">{upcoming.map(item=><article className="schedule-row" key={item.id}><img src={item.cover} alt="" loading="lazy"/><div><strong>{item.title}</strong><span>Épisode {item.nextEpisode?.episode} · {item.genres.slice(0,2).join(" · ")}</span></div><div className="schedule-date"><strong>{item.nextEpisode?formattedTime(item.nextEpisode.at):"—"}</strong><small>{item.nextEpisode?relative(item.nextEpisode.at):""}</small></div><a href={item.siteUrl} target="_blank" rel="noopener noreferrer" aria-label={"Voir "+item.title+" sur AniList"}>↗</a></article>)}{!loading&&upcoming.length===0&&<div className="empty">Aucune diffusion à venir renseignée.</div>}</div>}
+          {view==="calendar" && <div className="schedule-list">{upcoming.map(item=><article className="schedule-row" key={item.id}><img src={item.cover} alt="" loading="lazy"/><div><strong>{item.title}</strong><span>Épisode {item.nextEpisode?.episode} · {item.genres.slice(0,2).join(" · ")}</span></div><div className="schedule-date"><strong>{item.nextEpisode?formattedTime(item.nextEpisode.at):"—"}</strong><small>{item.nextEpisode?relative(item.nextEpisode.at):""}</small></div><a href={item.siteUrl} target="_blank" rel="noopener noreferrer" aria-label={"Voir "+item.title+" sur AniList"}>↗</a></article>)}{premieres.length>0&&<h3 className="calendar-subtitle">Nouvelles séries annoncées</h3>}{premieres.map(item=><article className="schedule-row" key={"premiere-"+item.id}><img src={item.cover} alt="" loading="lazy"/><div><strong>{item.title}</strong><span>Première de la série · {item.genres.slice(0,2).join(" · ")}</span></div><div className="schedule-date"><strong>{item.startDate?premiereLabel(item.startDate):"—"}</strong><small>date de lancement annoncée</small></div><a href={item.siteUrl} target="_blank" rel="noopener noreferrer" aria-label={"Voir "+item.title+" sur AniList"}>↗</a></article>)}{!loading&&upcoming.length===0&&premieres.length===0&&<div className="empty">Aucune diffusion à venir renseignée.</div>}</div>}
           {view==="telegram" && <div className="telegram-list">{recentPosts.map(post=><article key={post.id} className="telegram-row"><div className="telegram-row-icon">✈</div><div className="telegram-row-main"><strong>{post.title}</strong><span>{post.source} · {new Date(post.postedAt).toLocaleString("fr-FR")}</span></div><div className="telegram-row-ep">EP {post.episode}</div><div className="telegram-row-tags">{post.language&&<span>{post.language}</span>}{post.quality&&<span>{post.quality}</span>}</div>{post.url&&<a href={post.url} target="_blank" rel="noopener noreferrer" aria-label="Ouvrir la publication Telegram">↗</a>}</article>)}{recentPosts.length===0 && <div className="empty"><span>✈</span><h3>Ton flux Telegram est encore vide</h3><p>Connecte le synchroniseur local ou importe un fichier généré sur ta machine. Aucun message personnel ne sera envoyé à AniList.</p></div>}</div>}
         </section>
       </main>
