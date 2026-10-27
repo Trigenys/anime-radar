@@ -48,7 +48,7 @@ Le bot Telegram standard ne peut pas consulter automatiquement l'historique de t
 
 1. Depuis [my.telegram.org](https://my.telegram.org), récupère tes identifiants API (api_id et api_hash). Ils restent sur ton PC.
 2. Installe Python 3.11+, puis : python -m pip install -r scripts/requirements-telegram.txt
-3. Dans PowerShell, remplace les exemples par tes valeurs réelles :
+3. Copie .env.example en .env (ignoré par Git) et remplis-le, puis lance python scripts/telegram_sync.py. Ou, sans fichier, dans PowerShell, remplace les exemples par tes valeurs réelles :
 
    ~~~powershell
    $env:TELEGRAM_API_ID="TON_API_ID"
@@ -64,7 +64,7 @@ Le bot Telegram standard ne peut pas consulter automatiquement l'historique de t
 
 Alternative : exécute python scripts/telegram_sync.py une fois, puis sélectionne le fichier data/telegram-feed.json via **Importer un flux JSON**. Ce flux est en mémoire de la page et n'est pas envoyé à AniList.
 
-**Important :** seuls les chats que tu as choisis sont interrogés. Les formats reconnus incluent « Frieren - Episode 12 VOSTFR », « Frieren EP 12 » et « Frieren - 12 ». Les messages qui ne correspondent pas ne sont pas inventés. Aucun téléchargement ni contournement DRM.
+**Important :** seuls les chats que tu as choisis sont interrogés. Indique les chaînes qui publient les épisodes, pas les chaînes « sommaire » qui y renvoient ; une chaîne privée se désigne par son identifiant -100… (visible dans l'URL de Telegram Web). Les formats reconnus incluent « Frieren - Episode 12 VOSTFR », « Frieren EP 12 », « Frieren - 12 » et les cartes multi-lignes (titre, puis « Season : 01 » / « Épisode : 04 », y compris en petites capitales). Les exemples de référence sont dans test/fixtures/telegram-posts.json, partagés par les tests Python et TypeScript. Les messages qui ne correspondent pas ne sont pas inventés. Aucun téléchargement ni contournement DRM.
 
 ## Architecture
 
